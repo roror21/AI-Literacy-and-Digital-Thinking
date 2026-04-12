@@ -17,10 +17,15 @@ def render_preview(df):
 
 def draw_plot(df, x_col, y_col, color_col, show_trendline):
     """
-    사용자 선택 조건에 따라 산점도와 추세선을 렌더링하는 함수 (방어 코드 포함)
+    사용자 선택 조건에 따라 산점도와 추세선을 렌더링하고 각종 예외를 처리하는 함수
     """
     st.subheader("산점도 시각화 결과")
     
+    # 1. 예외 처리: X축과 Y축이 동일한 변수일 경우 차트 렌더링 중단
+    if x_col == y_col:
+        st.markdown("<span style='color:red; font-weight:bold;'>경고: X축과 Y축에 동일한 변수가 선택되었습니다. 서로 다른 변수를 선택해주세요.</span>", unsafe_allow_html=True)
+        return
+
     # '선택 안 함'일 경우 색상 변수를 None으로 처리
     color = None if color_col == "선택 안 함" else color_col
     
@@ -29,13 +34,14 @@ def draw_plot(df, x_col, y_col, color_col, show_trendline):
     is_y_numeric = pd.api.types.is_numeric_dtype(df[y_col])
 
     trendline = None
+    
+    # 2. 예외 처리: 추세선 표시는 요청되었으나 숫자가 아닌 데이터가 포함된 경우
     if show_trendline:
-        # 둘 다 숫자일 때만 추세선 활성화
         if is_x_numeric and is_y_numeric:
             trendline = "ols"
         else:
-            # 문자가 섞여 있으면 앱이 멈추지 않도록 추세선을 생략하고 텍스트 경고 메시지 출력 (이모티콘 배제)
-            st.markdown("<span style='color:orange; font-weight:bold;'>주의: 추세선(회귀선)은 X축과 Y축이 모두 '숫자' 데이터일 때만 표시됩니다. 추세선을 생략하고 산점도를 출력합니다.</span>", unsafe_allow_html=True)
+            # 문자가 섞여 있으면 앱이 멈추지 않도록 추세선을 생략하고 텍스트 경고 메시지 출력
+            st.markdown("<span style='color:orange; font-weight:bold;'>주의: 추세선(회귀선)은 X축과 Y축이 모두 '숫자' 데이터일 때만 표시됩니다. 추세선을 생략하고 산점도만 출력합니다.</span>", unsafe_allow_html=True)
 
     # Plotly Express를 이용한 산점도 생성
     fig = px.scatter(
