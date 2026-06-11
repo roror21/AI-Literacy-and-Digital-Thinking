@@ -323,11 +323,14 @@ def load_model():
 # 감성 분석
 # ==========================================
 
-def analyze_sentiment(model, comments):
+def analyze_sentiment(model, comment_items):
 
     results = []
 
-    for comment in comments:
+    for item in comment_items:
+
+        comment = item["comment"]
+        language = item["language"]
 
         try:
 
@@ -335,6 +338,7 @@ def analyze_sentiment(model, comments):
 
             results.append({
                 "comment": comment,
+                "language": language,
                 "label": result["label"],
                 "score": result["score"]
             })
@@ -425,7 +429,7 @@ if st.button("분석 시작"):
     )
 
     # ==========================================
-    # 월별 업로드 추세
+    # 영상 언어 분포
     # ==========================================
     st.subheader("🌍 영상 언어 분포")
 
@@ -451,34 +455,7 @@ if st.button("분석 시작"):
 
     st.pyplot(fig_lang)
 
-    st.subheader("📈 월별 업로드 추세")
-
-    video_df["published"] = pd.to_datetime(video_df["published"])
-
-    video_df["month"] = video_df["published"].dt.to_period("M").astype(str)
-
-    monthly = (
-        video_df.groupby("month")
-        .size()
-        .reset_index(name="count")
-    )
-
-    fig, ax = plt.subplots(figsize=(10, 5))
-
-    ax.plot(
-        monthly["month"],
-        monthly["count"],
-        marker="o"
-    )
-
-    ax.set_xlabel("월")
-    ax.set_ylabel("영상 개수")
-    ax.set_title("부산 관련 해외 영상 업로드 추세")
-
-    plt.xticks(rotation=45)
-
-    st.pyplot(fig)
-
+    
     # ==========================================
     # 댓글 수집
     # ==========================================
@@ -488,8 +465,9 @@ if st.button("분석 시작"):
     all_comments = []
 
     progress = st.progress(0)
+    total = len(video_df)
 
-    for idx, row in video_df.iterrows():
+    for i, (idx, row) in enumerate(video_df.iterrows()):
 
         comments = get_comments(
             youtube,
@@ -501,10 +479,14 @@ if st.button("분석 시작"):
             if is_foreign_comment(c)
         ]
 
-        all_comments.extend(foreign_comments)
+        for c in foreign_comments:
+            all_comments.append({
+                "comment": c,
+                "language": row["language"]
+            })
 
         progress.progress(
-            (idx + 1) / len(video_df)
+            (i + 1) / total
         )
 
     st.write(f"외국어 댓글 {len(all_comments)}개 수집 완료")
@@ -542,12 +524,62 @@ if st.button("분석 시작"):
         st.pyplot(fig2)
 
         # ==========================================
+        # 언어별 감성 분석 (감성 × 언어 교차분석)
+        # ==========================================
+
+        st.subheader("🌐 언어별 감성 분석")
+
+        # 댓글이 너무 적은 언어는 제외 (최소 5개 이상)
+        lang_counts = sentiment_df["language"].value_counts()
+        valid_langs = lang_counts[lang_counts >= 5].index
+
+        cross_df = sentiment_df[
+            sentiment_df["language"].isin(valid_langs)
+        ]
+
+        if len(cross_df) > 0:
+
+            # 언어 × 감성 교차표
+            cross = pd.crosstab(
+                cross_df["language"],
+                cross_df["label"]
+            )
+
+            st.dataframe(cross)
+
+            # 비율로 변환 (언어마다 댓글 수가 다르므로 %로 비교)
+            cross_pct = cross.div(cross.sum(axis=1), axis=0) * 100
+
+            fig_cross, ax_cross = plt.subplots(figsize=(10, 5))
+
+            cross_pct.plot(
+                kind="bar",
+                stacked=True,
+                ax=ax_cross
+            )
+
+            ax_cross.set_xlabel("영상 언어")
+            ax_cross.set_ylabel("비율 (%)")
+            ax_cross.set_title("언어별 댓글 감성 비율")
+            ax_cross.legend(title="감성")
+
+            plt.xticks(rotation=0)
+
+            st.pyplot(fig_cross)
+
+        else:
+
+            st.info("언어별로 비교할 만큼 댓글이 충분하지 않습니다.")
+
+        # ==========================================
         # 키워드 분석
         # ==========================================
 
         st.subheader("🔍 자주 등장한 키워드")
 
-        keywords = keyword_analysis(all_comments)
+        keywords = keyword_analysis(
+            [item["comment"] for item in all_comments]
+        )
 
         keyword_df = pd.DataFrame(
             keywords,
