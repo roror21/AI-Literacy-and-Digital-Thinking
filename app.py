@@ -328,23 +328,41 @@ def analyze_sentiment(model, comment_items):
     if len(comment_items) == 0:
         return pd.DataFrame()
 
-    # 댓글 텍스트만 뽑아서 한 번에 묶음 처리
     texts = [item["comment"][:512] for item in comment_items]
 
-    try:
-        outputs = model(texts, batch_size=16, truncation=True)
-    except Exception:
-        return pd.DataFrame()
-
     results = []
+    chunk_size = 16
+    total = len(texts)
 
-    for item, output in zip(comment_items, outputs):
-        results.append({
-            "comment": item["comment"],
-            "language": item["language"],
-            "label": output["label"],
-            "score": output["score"]
-        })
+    # 진행 표시
+    progress = st.progress(0)
+    status = st.empty()
+
+    for start in range(0, total, chunk_size):
+
+        end = start + chunk_size
+        batch_texts = texts[start:end]
+        batch_items = comment_items[start:end]
+
+        try:
+            outputs = model(batch_texts, truncation=True)
+        except Exception:
+            continue
+
+        for item, output in zip(batch_items, outputs):
+            results.append({
+                "comment": item["comment"],
+                "language": item["language"],
+                "label": output["label"],
+                "score": output["score"]
+            })
+
+        done = min(end, total)
+        progress.progress(done / total)
+        status.write(f"감성 분석 중... {done} / {total}개")
+
+    progress.empty()
+    status.empty()
 
     return pd.DataFrame(results)
     
