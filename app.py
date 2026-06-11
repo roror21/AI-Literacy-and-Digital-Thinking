@@ -19,6 +19,7 @@ from langdetect import detect
 from collections import Counter
 from datetime import datetime
 import re
+import random
 
 # ==========================================
 # 한글 폰트 설정
@@ -509,9 +510,10 @@ if st.button("분석 시작"):
 
     st.write(f"외국어 댓글 {len(all_comments)}개 수집 완료")
 
-    # 분석 속도를 위해 최대 500개만 사용
+    # 분석할 댓글 선별 (언어 골고루 뽑히도록 무작위로 섞은 뒤 자름)
     if len(all_comments) > 500:
-        st.info(f"수집된 댓글 {len(all_comments)}개 중 500개만 분석합니다.")
+        st.info(f"수집된 댓글 {len(all_comments)}개 중 500개를 무작위로 골라 분석합니다.")
+        random.shuffle(all_comments)
         all_comments = all_comments[:500]
 
     # ==========================================
