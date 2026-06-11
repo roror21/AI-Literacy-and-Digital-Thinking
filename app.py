@@ -325,29 +325,29 @@ def load_model():
 
 def analyze_sentiment(model, comment_items):
 
+    if len(comment_items) == 0:
+        return pd.DataFrame()
+
+    # 댓글 텍스트만 뽑아서 한 번에 묶음 처리
+    texts = [item["comment"][:512] for item in comment_items]
+
+    try:
+        outputs = model(texts, batch_size=16, truncation=True)
+    except Exception:
+        return pd.DataFrame()
+
     results = []
 
-    for item in comment_items:
-
-        comment = item["comment"]
-        language = item["language"]
-
-        try:
-
-            result = model(comment[:512])[0]
-
-            results.append({
-                "comment": comment,
-                "language": language,
-                "label": result["label"],
-                "score": result["score"]
-            })
-
-        except:
-            continue
+    for item, output in zip(comment_items, outputs):
+        results.append({
+            "comment": item["comment"],
+            "language": item["language"],
+            "label": output["label"],
+            "score": output["score"]
+        })
 
     return pd.DataFrame(results)
-
+    
 # ==========================================
 # 키워드 분석
 # ==========================================
