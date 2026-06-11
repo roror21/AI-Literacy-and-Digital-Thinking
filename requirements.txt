@@ -2,3 +2,8 @@ streamlit
 pandas
 plotly
 statsmodels
+matplotlib
+google-api-python-client
+transformers
+torch
+langdetect
