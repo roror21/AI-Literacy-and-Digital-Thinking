@@ -491,6 +491,11 @@ if st.button("분석 시작"):
 
     st.write(f"외국어 댓글 {len(all_comments)}개 수집 완료")
 
+    # 분석 속도를 위해 최대 500개만 사용
+    if len(all_comments) > 500:
+        st.info(f"수집된 댓글 {len(all_comments)}개 중 500개만 분석합니다.")
+        all_comments = all_comments[:500]
+
     # ==========================================
     # 감성 분석
     # ==========================================
@@ -558,7 +563,7 @@ if st.button("분석 시작"):
                 ax=ax_cross
             )
 
-            ax_cross.set_xlabel("영상 언어")
+            ax_cross.set_xlabel("")
             ax_cross.set_ylabel("비율 (%)")
             ax_cross.set_title("언어별 댓글 감성 비율")
             ax_cross.legend(title="감성")
