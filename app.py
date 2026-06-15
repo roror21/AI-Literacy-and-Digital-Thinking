@@ -546,137 +546,137 @@ if st.button("분석 시작"):
 
     if len(all_comments) > 0:
     
-            st.subheader("😊 댓글 감성 분석")
+        st.subheader("😊 댓글 감성 분석")
     
-            model = load_model()
+        model = load_model()
     
-            sentiment_df = analyze_sentiment(
-                model,
-                all_comments
-            )
+        sentiment_df = analyze_sentiment(
+            model,
+            all_comments
+        )
     
-            st.dataframe(sentiment_df)
+        st.dataframe(sentiment_df)
     
-            # 감성 비율
-            label_counts = sentiment_df["label"].value_counts()
+        # 감성 비율
+        label_counts = sentiment_df["label"].value_counts()
     
-            fig2, ax2 = plt.subplots()
+        fig2, ax2 = plt.subplots()
     
-            ax2.pie(
-                label_counts,
-                labels=label_counts.index,
-                autopct="%1.1f%%"
-            )
+        ax2.pie(
+            label_counts,
+            labels=label_counts.index,
+            autopct="%1.1f%%"
+        )
     
-            ax2.set_title("댓글 감성 비율")
+        ax2.set_title("댓글 감성 비율")
     
-            st.pyplot(fig2)
+        st.pyplot(fig2)
     
             # ==========================================
             # 언어별 감성 분석 (감성 × 언어 교차분석)
             # ==========================================
     
-            st.subheader("🌐 언어별 감성 분석")
+        st.subheader("🌐 언어별 감성 분석")
     
             # 댓글이 너무 적은 언어는 제외 (최소 5개 이상)
-            lang_counts = sentiment_df["language"].value_counts()
-            valid_langs = lang_counts[lang_counts >= 5].index
+        lang_counts = sentiment_df["language"].value_counts()
+        valid_langs = lang_counts[lang_counts >= 5].index
     
-            cross_df = sentiment_df[
-                sentiment_df["language"].isin(valid_langs)
-            ]
+        cross_df = sentiment_df[
+            sentiment_df["language"].isin(valid_langs)
+        ]
     
-            if len(cross_df) > 0:
+        if len(cross_df) > 0:
     
                 # 언어 × 감성 교차표
-                cross = pd.crosstab(
-                    cross_df["language"],
-                    cross_df["label"]
-                )
+            cross = pd.crosstab(
+                cross_df["language"],
+                cross_df["label"]
+            )
     
-                st.dataframe(cross)
+            st.dataframe(cross)
     
                 # 비율로 변환 (언어마다 댓글 수가 다르므로 %로 비교)
-                cross_pct = cross.div(cross.sum(axis=1), axis=0) * 100
+            cross_pct = cross.div(cross.sum(axis=1), axis=0) * 100
     
-                fig_cross, ax_cross = plt.subplots(figsize=(10, 5))
+            fig_cross, ax_cross = plt.subplots(figsize=(10, 5))
     
-                cross_pct.plot(
-                    kind="bar",
-                    stacked=True,
-                    ax=ax_cross
-                )
+            cross_pct.plot(
+                kind="bar",
+                stacked=True,
+                ax=ax_cross
+            )
     
-                ax_cross.set_xlabel("")
-                ax_cross.set_ylabel("비율 (%)")
-                ax_cross.set_title("언어별 댓글 감성 비율")
-                ax_cross.legend(title="감성")
+            ax_cross.set_xlabel("")
+            ax_cross.set_ylabel("비율 (%)")
+            ax_cross.set_title("언어별 댓글 감성 비율")
+            ax_cross.legend(title="감성")
     
-                plt.xticks(rotation=0)
+            plt.xticks(rotation=0)
     
-                st.pyplot(fig_cross)
+            st.pyplot(fig_cross)
     
-            else:
+        else:
     
-                st.info("언어별로 비교할 만큼 댓글이 충분하지 않습니다.")
+            st.info("언어별로 비교할 만큼 댓글이 충분하지 않습니다.")
     
             # ==========================================
             # 키워드 분석
             # ==========================================
     
-            st.subheader("🔍 자주 등장한 키워드")
+        st.subheader("🔍 자주 등장한 키워드")
     
-            keywords = keyword_analysis(
-                [item["comment"] for item in all_comments]
-            )
+        keywords = keyword_analysis(
+            [item["comment"] for item in all_comments]
+        )
     
-            keyword_df = pd.DataFrame(
-                keywords,
-                columns=["keyword", "count"]
-            )
+        keyword_df = pd.DataFrame(
+            keywords,
+            columns=["keyword", "count"]
+        )
     
-            st.dataframe(keyword_df)
+        st.dataframe(keyword_df)
     
             # ==========================================
             # 실제 댓글 예시
             # ==========================================
     
-            st.subheader("📝 실제 외국인 댓글 예시")
+        st.subheader("📝 실제 외국인 댓글 예시")
     
-            positive_comments = sentiment_df[
-                sentiment_df["label"] == "positive"
-                ]["comment"].head(5)
+        positive_comments = sentiment_df[
+            sentiment_df["label"] == "positive"
+            ]["comment"].head(5)
     
-            neutral_comments = sentiment_df[
-                sentiment_df["label"] == "neutral"
-                ]["comment"].head(5)
+        neutral_comments = sentiment_df[
+            sentiment_df["label"] == "neutral"
+            ]["comment"].head(5)
     
-            negative_comments = sentiment_df[
-                sentiment_df["label"] == "negative"
-                ]["comment"].head(5)
+        negative_comments = sentiment_df[
+            sentiment_df["label"] == "negative"
+            ]["comment"].head(5)
     
-            col1, col2, col3 = st.columns(3)
+        col1, col2, col3 = st.columns(3)
     
-            with col1:
+        with col1:
     
-                st.markdown("### 😊 긍정 댓글")
+            st.markdown("### 😊 긍정 댓글")
     
-                for c in positive_comments:
-                    st.success(c)
+            for c in positive_comments:
+                st.success(c)
     
-            with col2:
+        with col2:
     
-                st.markdown("### 😐 중립 댓글")
+            st.markdown("### 😐 중립 댓글")
     
-                for c in neutral_comments:
-                    st.info(c)
+            for c in neutral_comments:
+                st.info(c)
     
-            with col3:
+        with col3:
     
-                st.markdown("### 😡 부정 댓글")
+            st.markdown("### 😡 부정 댓글")
     
-                for c in negative_comments:
-                    st.error(c)
+            for c in negative_comments:
+                st.error(c)
     
         else:
     
