@@ -674,8 +674,6 @@ if st.button("분석 시작"):
         for c in negative_comments:
             st.error(c)
 
-else:
 
-    st.warning("외국어 댓글이 없습니다.")
 
 
