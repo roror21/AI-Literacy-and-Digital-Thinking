@@ -211,14 +211,14 @@ def search_videos(
             print("오류:", e)
 
     return pd.DataFrame(
-        videos,
-        columns=[
-            "video_id",
-            "title",
-            "channel",
-            "published"
-        ]
-    )
+    videos[:max_results],
+    columns=[
+        "video_id",
+        "title",
+        "channel",
+        "published"
+    ]
+)
 
 
 # ==========================================
@@ -484,17 +484,21 @@ if st.button("분석 시작"):
 
     st.dataframe(lang_count)
 
-    fig_lang, ax_lang = plt.subplots()
+    fig_lang, ax_lang = plt.subplots(
+    figsize=(8, 8)
+)
 
-    ax_lang.pie(
-        lang_count["count"],
-        labels=lang_count["language"],
-        autopct="%1.1f%%"
-    )
+ax_lang.pie(
+    lang_count["count"],
+    labels=lang_count["language"],
+    autopct="%1.1f%%",
+    textprops={"fontsize":8},
+    labeldistance=1.15
+)
 
-    ax_lang.set_title("영상 언어 분포")
+ax_lang.set_title("영상 언어 분포")
 
-    st.pyplot(fig_lang)
+st.pyplot(fig_lang)
 
     # ==========================================
     # 댓글 수집
