@@ -533,17 +533,18 @@ if st.button("분석 시작"):
         )
     
     st.write(f"외국어 댓글 {len(all_comments)}개 수집 완료")
-        # 분석할 댓글 선별 (언어 골고루 뽑히도록 무작위로 섞은 뒤 자름)
-        if len(all_comments) > 500:
-            st.info(f"수집된 댓글 {len(all_comments)}개 중 500개를 무작위로 골라 분석합니다.")
-            random.shuffle(all_comments)
-            all_comments = all_comments[:500]
-    
-        # ==========================================
-        # 감성 분석
-        # ==========================================
-    
-        if len(all_comments) > 0:
+
+    # 분석할 댓글 선별 (언어 골고루 뽑히도록 무작위로 섞은 뒤 자름)
+    if len(all_comments) > 500:
+        st.info(f"수집된 댓글 {len(all_comments)}개 중 500개를 무작위로 골라 분석합니다.")
+        random.shuffle(all_comments)
+        all_comments = all_comments[:500]
+
+    # ==========================================
+    # 감성 분석
+    # ==========================================
+
+    if len(all_comments) > 0:
     
             st.subheader("😊 댓글 감성 분석")
     
