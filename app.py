@@ -90,30 +90,30 @@ end_date = st.date_input(
     value=datetime.today()
 )
 
+
 # ==========================================
 # YouTube API 연결
 # ==========================================
 
 def get_youtube_service(api_key):
-
     return build(
         "youtube",
         "v3",
         developerKey=api_key
     )
 
+
 # ==========================================
 # 영상 검색
 # ==========================================
 
 def search_videos(
-    youtube,
-    keyword,
-    start_date,
-    end_date,
-    max_results
+        youtube,
+        keyword,
+        start_date,
+        end_date,
+        max_results
 ):
-
     keywords = [
         "Busan travel",
         "Busan trip",
@@ -134,77 +134,51 @@ def search_videos(
     for kw in keywords:
 
         try:
+            next_page_token = None
 
-            request = youtube.search().list(
-                q=kw,
-                part="snippet",
-                type="video",
-                maxResults=per_keyword,
-                publishedAfter=start_date.isoformat() + "T00:00:00Z",
-                publishedBefore=end_date.isoformat() + "T23:59:59Z"
-            )
+            for _ in range(3):  # 3페이지 수집
 
-            response = request.execute()
+                request = youtube.search().list(
+                    q=kw,
+                    part="snippet",
+                    type="video",
+                    maxResults=50,
+                    order="date",
+                    pageToken=next_page_token,
+                    publishedAfter=start_date.isoformat() + "T00:00:00Z",
+                    publishedBefore=end_date.isoformat() + "T23:59:59Z"
+                )
 
-            for item in response["items"]:
+                response = request.execute()
 
-                video_id = item["id"]["videoId"]
+                for item in response["items"]:
 
-                if video_id in seen_ids:
-                    continue
+                    video_id = item["id"]["videoId"]
 
-                snippet = item["snippet"]
+                    if video_id in seen_ids:
+                        continue
 
-                title = snippet["title"]
+                    # 기존 필터링 코드 그대로
 
-                # 한국어 제목 제거
-                if re.search(r"[가-힣]", title):
-                    continue
+                next_page_token = response.get(
+                    "nextPageToken"
+                )
 
-                # 여행 관련 영상만 허용
-                title_lower = title.lower()
-                exclude_keywords = [
-                    "food",
-                    "restaurant",
-                    "chicken",
-                    "mukbang",
-                    "recipe",
-                    "asmr",
-                    "music",
-                    "cover",
-                    "dance",
-                    "kpop",
-                    "shorts"
-                ]
+                if not next_page_token:
+                    break
 
-                if any(word in title_lower for word in exclude_keywords):
-                    continue
-                if not any(
-                    word.lower() in title_lower
-                    for word in travel_keywords
-                ):
-                    continue
-
-                seen_ids.add(video_id)
-
-                videos.append({
-                    "video_id": video_id,
-                    "title": title,
-                    "channel": snippet["channelTitle"],
-                    "published": snippet["publishedAt"]
-                })
 
         except:
             pass
 
     return pd.DataFrame(videos)
 
+
 # ==========================================
 # 댓글 수집
 # ==========================================
 
 def get_comments(youtube, video_id, max_comments=100):
-
     comments = []
 
     try:
@@ -218,7 +192,6 @@ def get_comments(youtube, video_id, max_comments=100):
         response = request.execute()
 
         for item in response["items"]:
-
             comment = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
 
             comments.append(comment)
@@ -228,20 +201,20 @@ def get_comments(youtube, video_id, max_comments=100):
 
     return comments
 
+
 # ==========================================
 # 외국어 댓글 판별
 # ==========================================
 
 def is_foreign_comment(text):
-
     try:
         return detect(text) != "ko"
 
     except:
         return False
 
-def detect_video_language(title):
 
+def detect_video_language(title):
     title_lower = title.lower()
 
     if re.search(r"[가-힣]", title):
@@ -264,6 +237,7 @@ def detect_video_language(title):
 
     except:
         return "unknown"
+
 
 language_map = {
     "en": "영어",
@@ -308,24 +282,25 @@ travel_keywords = [
     "busan trip",
     "visit busan"
 ]
+
+
 # ==========================================
 # 감성 분석 모델
 # ==========================================
 
 @st.cache_resource
 def load_model():
-
     return pipeline(
         "sentiment-analysis",
         model="cardiffnlp/twitter-roberta-base-sentiment-latest"
     )
+
 
 # ==========================================
 # 감성 분석
 # ==========================================
 
 def analyze_sentiment(model, comment_items):
-
     if len(comment_items) == 0:
         return pd.DataFrame()
 
@@ -366,13 +341,13 @@ def analyze_sentiment(model, comment_items):
     status.empty()
 
     return pd.DataFrame(results)
-    
+
+
 # ==========================================
 # 키워드 분석
 # ==========================================
 
 def keyword_analysis(comments):
-
     text = " ".join(comments).lower()
 
     words = re.findall(r'\b[a-z]{4,}\b', text)
@@ -393,6 +368,7 @@ def keyword_analysis(comments):
 
     return counter.most_common(15)
 
+
 # ==========================================
 # 분석 시작 버튼
 # ==========================================
@@ -400,7 +376,6 @@ def keyword_analysis(comments):
 if st.button("분석 시작"):
 
     if not api_key:
-
         st.error("YouTube API Key를 입력하세요.")
         st.stop()
 
@@ -474,7 +449,6 @@ if st.button("분석 시작"):
 
     st.pyplot(fig_lang)
 
-    
     # ==========================================
     # 댓글 수집
     # ==========================================
@@ -621,15 +595,15 @@ if st.button("분석 시작"):
 
         positive_comments = sentiment_df[
             sentiment_df["label"] == "positive"
-        ]["comment"].head(5)
+            ]["comment"].head(5)
 
         neutral_comments = sentiment_df[
             sentiment_df["label"] == "neutral"
-        ]["comment"].head(5)
+            ]["comment"].head(5)
 
         negative_comments = sentiment_df[
             sentiment_df["label"] == "negative"
-        ]["comment"].head(5)
+            ]["comment"].head(5)
 
         col1, col2, col3 = st.columns(3)
 
@@ -638,7 +612,6 @@ if st.button("분석 시작"):
             st.markdown("### 😊 긍정 댓글")
 
             for c in positive_comments:
-
                 st.success(c)
 
         with col2:
@@ -646,7 +619,6 @@ if st.button("분석 시작"):
             st.markdown("### 😐 중립 댓글")
 
             for c in neutral_comments:
-
                 st.info(c)
 
         with col3:
@@ -654,9 +626,10 @@ if st.button("분석 시작"):
             st.markdown("### 😡 부정 댓글")
 
             for c in negative_comments:
-
                 st.error(c)
 
     else:
 
         st.warning("외국어 댓글이 없습니다.")
+
+
