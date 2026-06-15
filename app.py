@@ -114,6 +114,7 @@ def search_videos(
         end_date,
         max_results
 ):
+
     keywords = [
         "Busan travel",
         "Busan trip",
@@ -129,14 +130,13 @@ def search_videos(
     videos = []
     seen_ids = set()
 
-    per_keyword = max(5, max_results // len(keywords))
-
     for kw in keywords:
 
         try:
+
             next_page_token = None
 
-            for _ in range(3):  # 3페이지 수집
+            for _ in range(3):
 
                 request = youtube.search().list(
                     q=kw,
@@ -158,7 +158,47 @@ def search_videos(
                     if video_id in seen_ids:
                         continue
 
-                    # 기존 필터링 코드 그대로
+                    snippet = item["snippet"]
+
+                    title = snippet["title"]
+
+                    # 한국어 제목 제거
+                    if re.search(r"[가-힣]", title):
+                        continue
+
+                    title_lower = title.lower()
+
+                    exclude_keywords = [
+                        "food",
+                        "restaurant",
+                        "chicken",
+                        "mukbang",
+                        "recipe",
+                        "asmr",
+                        "music",
+                        "cover",
+                        "dance",
+                        "kpop",
+                        "shorts"
+                    ]
+
+                    if any(word in title_lower for word in exclude_keywords):
+                        continue
+
+                    if not any(
+                            word.lower() in title_lower
+                            for word in travel_keywords
+                    ):
+                        continue
+
+                    seen_ids.add(video_id)
+
+                    videos.append({
+                        "video_id": video_id,
+                        "title": title,
+                        "channel": snippet["channelTitle"],
+                        "published": snippet["publishedAt"]
+                    })
 
                 next_page_token = response.get(
                     "nextPageToken"
@@ -167,11 +207,18 @@ def search_videos(
                 if not next_page_token:
                     break
 
+        except Exception as e:
+            print("오류:", e)
 
-        except:
-            pass
-
-    return pd.DataFrame(videos)
+    return pd.DataFrame(
+        videos,
+        columns=[
+            "video_id",
+            "title",
+            "channel",
+            "published"
+        ]
+    )
 
 
 # ==========================================
