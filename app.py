@@ -483,7 +483,7 @@ if st.button("분석 시작"):
 
     st.dataframe(lang_count)
 
-        fig_lang, ax_lang = plt.subplots(
+    fig_lang, ax_lang = plt.subplots(
         figsize=(8, 8)
     )
 
@@ -499,9 +499,9 @@ if st.button("분석 시작"):
 
     st.pyplot(fig_lang)
 
-# ==========================================
-# 댓글 수집
-# ==========================================
+    # ==========================================
+    # 댓글 수집
+    # ==========================================
 
     st.subheader("💬 댓글 수집")
     
