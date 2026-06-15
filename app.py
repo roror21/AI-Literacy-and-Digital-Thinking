@@ -546,81 +546,81 @@ if st.button("분석 시작"):
 
     if len(all_comments) > 0:
 
-    st.subheader("😊 댓글 감성 분석")
+        st.subheader("😊 댓글 감성 분석")
 
-    model = load_model()
+        model = load_model()
 
-    sentiment_df = analyze_sentiment(
-        model,
-        all_comments
-    )
-
-    st.dataframe(sentiment_df)
-
-    # 감성 비율
-    label_counts = sentiment_df["label"].value_counts()
-
-    fig2, ax2 = plt.subplots()
-
-    ax2.pie(
-        label_counts,
-        labels=label_counts.index,
-        autopct="%1.1f%%"
-    )
-
-    ax2.set_title("댓글 감성 비율")
-
-    st.pyplot(fig2)
-
-    # ==========================================
-    # 언어별 감성 분석
-    # ==========================================
-
-    st.subheader("🌐 언어별 감성 분석")
-
-    lang_counts = sentiment_df["language"].value_counts()
-    valid_langs = lang_counts[lang_counts >= 5].index
-
-    cross_df = sentiment_df[
-        sentiment_df["language"].isin(valid_langs)
-    ]
-
-    if len(cross_df) > 0:
-
-        cross = pd.crosstab(
-            cross_df["language"],
-            cross_df["label"]
+        sentiment_df = analyze_sentiment(
+            model,
+            all_comments
         )
 
-        st.dataframe(cross)
+        st.dataframe(sentiment_df)
 
-        cross_pct = cross.div(
-            cross.sum(axis=1),
-            axis=0
-        ) * 100
+        # 감성 비율
+        label_counts = sentiment_df["label"].value_counts()
 
-        fig_cross, ax_cross = plt.subplots(
-            figsize=(10, 5)
+        fig2, ax2 = plt.subplots()
+
+        ax2.pie(
+            label_counts,
+            labels=label_counts.index,
+            autopct="%1.1f%%"
         )
 
-        cross_pct.plot(
-            kind="bar",
-            stacked=True,
-            ax=ax_cross
-        )
+        ax2.set_title("댓글 감성 비율")
 
-        ax_cross.set_xlabel("")
-        ax_cross.set_ylabel("비율 (%)")
-        ax_cross.set_title("언어별 댓글 감성 비율")
-        ax_cross.legend(title="감성")
+        st.pyplot(fig2)
 
-        plt.xticks(rotation=0)
+        # ==========================================
+        # 언어별 감성 분석
+        # ==========================================
 
-        st.pyplot(fig_cross)
+        st.subheader("🌐 언어별 감성 분석")
 
-    else:
+        lang_counts = sentiment_df["language"].value_counts()
+        valid_langs = lang_counts[lang_counts >= 5].index
 
-        st.info("언어별로 비교할 만큼 댓글이 충분하지 않습니다.")
+        cross_df = sentiment_df[
+            sentiment_df["language"].isin(valid_langs)
+        ]
+
+        if len(cross_df) > 0:
+
+            cross = pd.crosstab(
+                cross_df["language"],
+                cross_df["label"]
+            )
+
+            st.dataframe(cross)
+
+            cross_pct = cross.div(
+                cross.sum(axis=1),
+                axis=0
+            ) * 100
+
+            fig_cross, ax_cross = plt.subplots(
+                figsize=(10, 5)
+            )
+
+            cross_pct.plot(
+                kind="bar",
+                stacked=True,
+                ax=ax_cross
+            )
+
+            ax_cross.set_xlabel("")
+            ax_cross.set_ylabel("비율 (%)")
+            ax_cross.set_title("언어별 댓글 감성 비율")
+            ax_cross.legend(title="감성")
+
+            plt.xticks(rotation=0)
+
+            st.pyplot(fig_cross)
+
+        else:
+
+            st.info("언어별로 비교할 만큼 댓글이 충분하지 않습니다.")
 
     # ==========================================
     # 키워드 분석
