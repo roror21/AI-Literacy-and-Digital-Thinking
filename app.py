@@ -220,7 +220,6 @@ def search_videos(
     ]
 )
 
-
 # ==========================================
 # 댓글 수집
 # ==========================================
@@ -500,24 +499,40 @@ ax_lang.set_title("영상 언어 분포")
 
 st.pyplot(fig_lang)
 
-    # ==========================================
-    # 댓글 수집
-    # ==========================================
+# ==========================================
+# 댓글 수집
+# ==========================================
 
-    st.subheader("💬 댓글 수집")
+st.subheader("💬 댓글 수집")
 
-    all_comments = []
+all_comments = []
 
-    progress = st.progress(0)
-    total = len(video_df)
+progress = st.progress(0)
+total = len(video_df)
 
-    for i, (idx, row) in enumerate(video_df.iterrows()):
+for i, (idx, row) in enumerate(video_df.iterrows()):
 
-        comments = get_comments(
-            youtube,
-            row["video_id"]
-        )
+    comments = get_comments(
+        youtube,
+        row["video_id"]
+    )
 
+    foreign_comments = [
+        c for c in comments
+        if is_foreign_comment(c)
+    ]
+
+    for c in foreign_comments:
+        all_comments.append({
+            "comment": c,
+            "language": row["language"]
+        })
+
+    progress.progress(
+        (i + 1) / total
+    )
+
+st.write(f"외국어 댓글 {len(all_comments)}개 수집 완료")
         foreign_comments = [
             c for c in comments
             if is_foreign_comment(c)
